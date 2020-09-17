@@ -10,10 +10,14 @@ class CPU:
         self.ram = [number for number in range(256)]
         self.reg = [0] * 8
         self.pc = 0
+        self.sp = 7
+        self.reg[self.sp] = 0xF4 
         self.LDI = 0b10000010
         self.PRN = 0b01000111
         self.HLT = 0b00000001
         self.MUL = 0b10100010
+        self.PUSH = 0b01000101
+        self.POP = 0b01000110
         self.program = [
             # Default program
             # From print8.ls8
@@ -137,6 +141,64 @@ class CPU:
 
                 self.alu('MUL',self.ram_read(self.pc + 1),self.ram_read(self.pc + 2))
                 self.pc += 3
+
+            elif IR == self.PUSH:
+                
+                # Decrement the SP
+
+                self.reg[self.sp] -= 1 
+
+                # Copy the register value into SP's location
+                # Get the reg num to push
+
+                # reg_num = self.ram[self.pc + 1]
+
+                # # Get the value to push
+
+                # value = self.reg[reg_num]
+
+                # # Copy the value to the SP's location
+
+                # top_of_the_stack = self.reg[self.sp]
+
+                # self.ram_write(top_of_the_stack,value)
+                
+                # In one line:
+                self.ram_write(self.reg[self.sp],self.reg[self.ram[self.pc + 1]])
+
+
+                self.pc += 2
+
+            elif IR == self.POP:
+
+                # Copy the value from SP's location to the register
+                # Get the register number to pop into
+                
+                # reg_num = self.ram[self.pc +1]
+
+                # # Get the top of the stack address
+
+                # top_of_stack_addr = self.reg[self.sp]
+
+                # # Get the value of the top of the stack
+
+                # value = self.ram_read(top_of_stack_addr)
+
+                # # Store the value into the register
+
+                # self.reg[reg_num] = value
+
+                # In one line:
+
+                self.reg[self.ram_read(self.pc +1)] = self.ram_read(self.reg[self.sp])
+
+
+                # Increment the SP
+                
+                self.reg[self.sp] += 1
+
+                self.pc += 2
+
 
             else:
 
