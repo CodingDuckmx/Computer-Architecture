@@ -15,9 +15,12 @@ class CPU:
         self.LDI = 0b10000010
         self.PRN = 0b01000111
         self.HLT = 0b00000001
+        self.ADD = 0b10100000
         self.MUL = 0b10100010
         self.PUSH = 0b01000101
         self.POP = 0b01000110
+        self.CALL = 0b01010000
+        self.RET = 0b00010001
         self.program = [
             # Default program
             # From print8.ls8
@@ -88,6 +91,62 @@ class CPU:
         else:
             raise Exception("Unsupported ALU operation")
 
+    def push_to_stack(self,value):
+
+        # Decrement the SP
+
+        self.reg[self.sp] -= 1 
+
+        # Copy the register value into SP's location
+        # Get the reg num to push
+
+        # reg_num = self.ram[self.pc + 1]
+
+        # # Get the value to push
+
+        # value = self.reg[reg_num]
+
+        # # Copy the value to the SP's location
+
+        # top_of_the_stack = self.reg[self.sp]
+
+        # self.ram_write(top_of_the_stack,value)
+        
+        # In one line:
+        self.ram_write(self.reg[self.sp],value)
+
+  
+
+    def pop_from_stack(self):
+
+        # Copy the value from SP's location to the register
+        # Get the register number to pop into
+        
+        # reg_num = self.ram[self.pc +1]
+
+        # # Get the top of the stack address
+
+        # top_of_stack_addr = self.reg[self.sp]
+
+        # # Get the value of the top of the stack
+
+        # value = self.ram_read(top_of_stack_addr)
+
+        # # Store the value into the register
+
+        # self.reg[reg_num] = value
+
+        # In fewer lines:
+
+        # Increment the SP
+        
+        top_of_stack_addr = self.reg[self.sp]
+
+        self.reg[self.sp] += 1
+
+        return self.ram_read(top_of_stack_addr)
+
+
     def trace(self):
         """
         Handy function to print out the CPU state. You might want to call this
@@ -137,68 +196,40 @@ class CPU:
 
                 self.halt()
 
+            elif IR == self.ADD:
+
+                self.alu('ADD',self.ram_read(self.pc + 1),self.ram_read(self.pc + 2))
+                self.pc += 3
+
             elif IR == self.MUL:
 
                 self.alu('MUL',self.ram_read(self.pc + 1),self.ram_read(self.pc + 2))
                 self.pc += 3
 
             elif IR == self.PUSH:
-                
-                # Decrement the SP
 
-                self.reg[self.sp] -= 1 
-
-                # Copy the register value into SP's location
-                # Get the reg num to push
-
-                # reg_num = self.ram[self.pc + 1]
-
-                # # Get the value to push
-
-                # value = self.reg[reg_num]
-
-                # # Copy the value to the SP's location
-
-                # top_of_the_stack = self.reg[self.sp]
-
-                # self.ram_write(top_of_the_stack,value)
-                
-                # In one line:
-                self.ram_write(self.reg[self.sp],self.reg[self.ram[self.pc + 1]])
-
+                self.push_to_stack(self.reg[self.ram[self.pc + 1]])
 
                 self.pc += 2
 
             elif IR == self.POP:
 
-                # Copy the value from SP's location to the register
-                # Get the register number to pop into
-                
-                # reg_num = self.ram[self.pc +1]
-
-                # # Get the top of the stack address
-
-                # top_of_stack_addr = self.reg[self.sp]
-
-                # # Get the value of the top of the stack
-
-                # value = self.ram_read(top_of_stack_addr)
-
-                # # Store the value into the register
-
-                # self.reg[reg_num] = value
-
-                # In one line:
-
-                self.reg[self.ram_read(self.pc +1)] = self.ram_read(self.reg[self.sp])
-
-
-                # Increment the SP
-                
-                self.reg[self.sp] += 1
+                self.reg[self.ram_read(self.pc +1)] = self.pop_from_stack()
 
                 self.pc += 2
 
+            elif IR == self.CALL:
+
+                # Push to the stack the next instruction after call
+                self.push_to_stack(self.pc + 2)
+
+                # The PC is set to the address stored in the given register.
+                self.pc = self.reg[self.ram_read(self.pc + 1)]
+
+            elif IR == self.RET:
+
+                # Pop the value from the top of the stack and store it in the PC.
+                self.pc = self.pop_from_stack()              
 
             else:
 
